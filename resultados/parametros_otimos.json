@@ -1,0 +1,9 @@
+{
+  "peso_mayer": 0.3,
+  "b1": 1.5,
+  "b2": 1.75,
+  "b3": 2.0,
+  "sortino_is": 0.44150292907939864,
+  "exposicao_media": 0.4699824878058962,
+  "n_rebalanceios": 280
+}
