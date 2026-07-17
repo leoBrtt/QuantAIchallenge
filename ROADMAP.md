@@ -79,20 +79,23 @@ Este documento é o nosso checklist vivo. Aqui anotamos o que já foi definido e
 
 ---
 
-## FASE 3: Programação do Motor Quantitativo (`backtest.py`) [A FAZER]
-*Implementar seguindo estritamente as regras dos §2–§6 do `CLAUDE.md` (convenção T+1, warm-up, custos, guardas numéricas e protocolo do Grid Search).*
-- [ ] **Extração de dados:** preço BTC-USD desde 2017-01-01 (`yfinance`) + FNG (`Alternative.me`, existe desde 01/02/2018); cache local dos CSVs brutos na primeira captura (point-in-time); preenchimento de FNG faltante com **forward-fill apenas**; sanity check (preço > 0, |retorno diário| < 60%, sem datas duplicadas — abortar em violação).
-- [ ] **Sinal:** Score Combinado com `Peso_Mayer + Peso_FNG = 1` e Z-Score móvel `.rolling(90, min_periods=90)` causal, com guarda de std ≈ 0 → mantém escala anterior.
-- [ ] **Mapeamento e alocação:** cortes simétricos ±b1/±b2/±b3 em direção contrária (Score_Z alto → menos BTC); `w_BTC = (Escala + 3) / 6`.
-- [ ] **Motor de carteira:** convenção T+1 (`retorno[t] = w_sinal[t-2] × r[t]`); rebalanceio só na mudança de nível; custo de 10 bps debitado na execução; caixa a 0%; equity marcada a mercado (`caixa + qtd_BTC × preço`) com e sem custos; warm-up excluído da janela avaliada (estratégia e benchmark começam na mesma data).
-- [ ] **Grid Search In-Sample:** 4 parâmetros, grid grosso determinístico; objetivo único pré-declarado = Sortino IS (T+1 + custos dentro do loop); descartar configurações com exposição média < 25% ou métrica N/A; gerar heatmap da vizinhança do ótimo.
-- [ ] **Simulação final Out-of-Sample:** execução **one-shot** com parâmetros congelados (sem segunda rodada de tuning); benchmark Buy & Hold com a mesma convenção e data de início; rolling não é resetado na fronteira.
+## FASE 3: Programação do Motor Quantitativo (`backtest.py`) [CONCLUÍDA em 17/07/2026]
+*Implementado seguindo estritamente as regras dos §2–§6 do `CLAUDE.md` (convenção T+1, warm-up, custos, guardas numéricas e protocolo do Grid Search).*
+- [x] **Extração de dados:** preço BTC-USD desde 2017-01-01 (`yfinance`) + FNG (`Alternative.me`, existe desde 01/02/2018); cache local dos CSVs brutos na primeira captura (point-in-time, em `dados/`); preenchimento de FNG faltante com **forward-fill apenas**; sanity check (preço > 0, |retorno diário| < 60%, sem datas duplicadas — abortar em violação).
+- [x] **Sinal:** Score Combinado com `Peso_Mayer + Peso_FNG = 1` e Z-Score móvel `.rolling(90, min_periods=90)` causal, com guarda de std ≈ 0 → mantém escala anterior. Primeiro Z-Score válido confirmado em **2018-05-01** (início da janela avaliada).
+- [x] **Mapeamento e alocação:** cortes simétricos ±b1/±b2/±b3 em direção contrária (Score_Z alto → menos BTC); `w_BTC = (Escala + 3) / 6`.
+- [x] **Motor de carteira:** convenção T+1 (`retorno[t] = w_sinal[t-2] × r[t]`); rebalanceio só na mudança de nível; custo de 10 bps debitado na execução; caixa a 0%; equity marcada a mercado (`caixa + qtd_BTC × preço`) com e sem custos; warm-up excluído da janela avaliada (estratégia e benchmark começam na mesma data). **Verificado por auditoria independente:** as igualdades `retorno[t] = w_exec[t-1] × r[t]` e `escala_exec[t] = escala_sinal[t-1]` foram testadas dia a dia em toda a série (script de checagem), além de reprodutibilidade bit a bit entre execuções a partir do cache.
+- [x] **Grid Search In-Sample:** 4 parâmetros, grid grosso determinístico (616 combinações: pesos 0,0–1,0 passo 0,1 × cortes 0,25–2,0 passo 0,25); objetivo único pré-declarado = Sortino IS (T+1 + custos dentro do loop); descarte por exposição média < 25% ou métrica N/A; superfície completa exportada em `resultados/grid_search_is.csv` (insumo do heatmap da Fase 4).
+- [x] **Simulação final Out-of-Sample:** execução **one-shot** com parâmetros congelados (`Peso_Mayer=0,3`, `b1=1,50`, `b2=1,75`, `b3=2,00`); benchmark Buy & Hold com a mesma convenção e data de início (passa pelo mesmo motor com sinal constante +3); rolling não resetado na fronteira (auditoria de causalidade embutida no script: Z-Score truncado em 2022 ≡ Z-Score full-sample nas mesmas datas).
+- ⚠️ **Observação para a defesa (não resolvida de propósito):** o ótimo do grid caiu na **borda superior** do espaço de cortes (`b3 = 2,00` é o máximo do grid) — a superfície do Sortino IS cresce na direção de cortes mais largos (estratégia mais inerte). Ampliar o grid agora, depois de já ter observado o OOS, flertaria com re-tuning; qualquer redesenho do espaço de busca deve ser justificado a priori e documentado, com nova rodada OOS única. Decisão pendente para discussão.
 
 ---
 
-## FASE 4: Auditoria Visual e Gráficos (`backtest_resultado.html`) [A FAZER]
-- [ ] Programar painel superior do Plotly (Preço + SMA 200 + Setas de Rebalanceamento).
-- [ ] Programar painel inferior do Plotly (Equity Curve da estratégia **com e sem custos** vs. Buy & Hold + Área de alocação de caixa).
-- [ ] Tabela de métricas (máx. 6 + bônus, `CLAUDE.md` §5): Retorno anualizado, Volatilidade anualizada, Sharpe (rf=0), Sortino, Calmar, Max Drawdown, Beta vs. Buy & Hold — com N/A explícito quando a guarda numérica disparar.
-- [ ] Heatmap de robustez do Grid Search (vizinhança do ótimo) como material de defesa perante a banca.
-- [ ] Exportar HTML interativo para auditoria e apresentação da banca.
+## FASE 4: Auditoria Visual e Gráficos (`backtest_resultado.html`) [CONCLUÍDA em 17/07/2026]
+*Implementada em `gerar_graficos.py`, que consome exclusivamente as saídas congeladas do motor (`resultados/`) — nunca recalcula métricas. HTMLs autocontidos (plotly.js embutido, funcionam offline).*
+- [x] **Painel superior** (Preço BTC em escala log com toggle Log/Linear + SMA 200 + marcadores triangulares ↑/↓ nos dias exatos de rebalanceamento, deslocados ±7% da linha de preço para não encobri-la; tooltip mostra escala e alvo de alocação antes/depois).
+- [x] **Painel inferior** (Equity da estratégia com e sem custos vs. Buy & Hold líquido — mesmo motor, mesma data de início — + faixa de alocação BTC/Caixa em eixo secundário comprimido no terço inferior, estilo "volume").
+- [x] **Crosshair sincronizado:** os dois painéis compartilham um único eixo X (`hoversubplots="axis"` + `hovermode="x unified"`, Plotly ≥ 5.21) — um só tooltip com Data, Preço, alocação e retorno acumulado estratégia vs. benchmark; botões de período (completo / IS / OOS) e fronteira IS/OOS demarcada em 31/12/2022.
+- [x] **Tabela de métricas §5** no topo (IS e OOS lado a lado): Retorno anualizado, Volatilidade, Sharpe (rf=0), Sortino (MAR=0), Calmar, Max Drawdown + Beta bônus, exposição média e nº de rebalanceios — colunas estratégia líquida/bruta/Buy & Hold, formato pt-BR, N/A explícito quando a guarda numérica disparar.
+- [x] **Heatmap de robustez** (`resultados/heatmap_robustez.html`): dois cortes 2D da superfície do Sortino IS pela vizinhança do ótimo (peso Mayer × b1 e b1 × b2), escala divergente ancorada em 0, célula ótima contornada, células descartadas em branco; inclui a observação de defesa sobre o ótimo na borda do grid (b3 = 2,00).
+- [x] **Design auditável:** paleta validada pelo verificador de daltonismo/contraste do guia de dataviz (azul/laranja/verde-água passam todos os checks sobre a superfície clara); curva "sem custos" = mesma entidade, mesmo azul tracejado; verde/vermelho dos rebalanceios são cores de estado com forma (triângulo) como codificação secundária; grade em hairline recessiva; render final auditado via screenshot headless.

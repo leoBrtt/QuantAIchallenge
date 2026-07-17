@@ -4,8 +4,9 @@ referencias/
 # Dados brutos cacheados (yfinance + Alternative.me) — reprodutíveis via download
 *.csv
 
-# Saídas geradas pelo backtest
+# Saídas geradas pelo backtest (regeneráveis via backtest.py + gerar_graficos.py)
 backtest_resultado.html
+resultados/heatmap_robustez.html
 
 # Python
 __pycache__/
