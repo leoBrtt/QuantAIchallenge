@@ -1,8 +1,8 @@
-# Explicação Técnica do Motor Quantitativo — Passo a Passo
+# CONTRAMARÉ — Explicação Técnica do Motor Quantitativo, Passo a Passo
 
-Este documento explica, em linguagem direta, como o `backtest.py` vai funcionar do começo ao fim. Cada etapa traz o cálculo envolvido e **o motivo** de cada decisão de arquitetura. A ideia é que qualquer pessoa (inclusive a banca) consiga ler este arquivo e entender exatamente o que o programa faz e por que faz assim, sem precisar abrir o código.
+Este documento explica, em linguagem direta, como o `backtest.py` funciona do começo ao fim. Cada etapa traz o cálculo envolvido e **o motivo** de cada decisão de arquitetura. A ideia é que qualquer pessoa (inclusive a banca) consiga ler este arquivo e entender exatamente o que o programa faz e por que faz assim, sem precisar abrir o código.
 
-O objetivo do programa é simples de enunciar: **decidir, dia a dia, quanto do patrimônio fica em Bitcoin e quanto fica em caixa**, usando dois indicadores objetivos (preço relativo à média e sentimento do mercado), e provar via backtest que essa regra teria performado bem — sem cair em nenhuma das armadilhas estatísticas que invalidariam o resultado.
+O objetivo do programa é simples de enunciar: **decidir, dia a dia, quanto do patrimônio fica em Bitcoin e quanto fica em caixa**, usando dois indicadores objetivos (preço relativo à média e sentimento do mercado), e validar essa regra via backtest sem cair em nenhuma das armadilhas estatísticas que invalidariam o resultado. O mandato da CONTRAMARÉ é de **perfil de risco**: ela não promete vencer o Bitcoin em retorno — promete entregar uma fração controlada do risco dele (beta ~0,5, drawdowns estruturalmente menores).
 
 ---
 
@@ -186,7 +186,7 @@ Duas regras:
 1. **Custo de 10 bps (0,10%)** sobre o valor negociado a cada rebalanceamento. Reportamos a curva de capital **com e sem** custos, para deixar transparente o impacto da fricção.
 2. **Só rebalanceamos quando a escala muda de nível** — nunca fazemos ajustes diários para corrigir a "deriva" natural da carteira (quando o BTC sobe e desequilibra levemente os percentuais).
 
-**Por que se preocupar tanto com custo?** Porque uma estratégia que rebalanceia todo dia pode parecer ótima no papel e perder dinheiro na prática, comida pelas taxas. É o **primeiro ataque** de qualquer avaliador sério. Além disso, o Z-Score pode ficar oscilando bem em cima de uma linha de corte, fazendo a escala vibrar entre dois níveis dia sim, dia não — o que geraria uma enxurrada de trades. Só rebalancear na mudança de nível controla isso.
+**Por que se preocupar tanto com custo?** Porque uma estratégia que rebalanceia todo dia pode parecer ótima no papel e perder dinheiro na prática, comida pelas taxas. É o **primeiro ataque** de qualquer avaliador sério. Além disso, o Z-Score pode ficar oscilando bem em cima de uma linha de corte, fazendo a escala vibrar entre dois níveis dia sim, dia não — o que geraria uma enxurrada de trades. Só rebalancear na mudança de nível controla isso — mas não elimina: na prática a estratégia ainda faz ~60–72 rebalanceamentos por ano, e 31% deles saltam 2 ou mais níveis de uma vez (whipsaw), custando 1,7–2,0 p.p. de retorno ao ano. Esses números estão dissecados nas Seções 6 e 9.5 do relatório técnico.
 
 ### Como a curva de capital (equity) é construída
 O patrimônio é sempre **marcado a mercado**:
@@ -197,7 +197,7 @@ recalculado a cada rebalanceamento. O caixa **não rende juros** (0% ao ano).
 
 **Por que marcar a mercado em vez de encadear percentuais?** Encadear variações percentuais de preço isoladamente gera erros de composição quando a alocação muda no meio do caminho. Reconstruir o patrimônio a partir de "caixa + posição" a cada passo é a forma correta e à prova de erros.
 
-**Por que caixa a 0%?** É a hipótese **conservadora** (não estamos inflando o resultado com um rendimento de renda fixa otimista) e evita ter que buscar mais uma fonte de dados (taxa de juros histórica). Se a estratégia ganha do Buy & Hold mesmo com o caixa rendendo zero, o resultado é ainda mais robusto.
+**Por que caixa a 0%?** É a hipótese **conservadora** (não estamos inflando o resultado com um rendimento de renda fixa otimista) e evita ter que buscar mais uma fonte de dados (taxa de juros histórica). A convenção desfavorece a estratégia (que carrega ~50% de caixa na média), nunca o benchmark. O efeito de remunerar o caixa a 3–5% a.a. foi quantificado como estudo de sensibilidade com parâmetros congelados (Seção 10 do relatório): ~+0,5–0,6 p.p./ano por ponto de taxa, sem alterar nenhuma conclusão qualitativa.
 
 ---
 

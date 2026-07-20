@@ -548,13 +548,14 @@ def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Backtest — Estratégia Contrarian BTC/Caixa · Quant AI 2026</title>
+<title>CONTRAMARÉ — Backtest da Estratégia Contrarian BTC/Caixa · Quant AI 2026</title>
 <style>{CSS}</style>
 </head>
 <body>
   <header class="card">
-    <h1>Estratégia Contrarian BTC/Caixa — Múltiplo de Mayer × Fear &amp; Greed</h1>
-    <p class="sub">{subtitulo}</p>
+    <h1>CONTRAMARÉ — Alocação Contrarian BTC/Caixa (Múltiplo de Mayer × Fear &amp; Greed)</h1>
+    <p class="sub">CONTRAMARÉ não promete vencer o Bitcoin em retorno — promete entregar
+    uma fração controlada do risco dele. {subtitulo}</p>
   </header>
   <div class="grade">{tabela_metricas_html(metricas)}</div>
   <div>{painel_periodo_html(serie)}
@@ -646,12 +647,12 @@ def montar_pagina_heatmap(fig: go.Figure, params: dict, grid: pd.DataFrame) -> s
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Robustez do Grid Search — Quant AI 2026</title>
+<title>CONTRAMARÉ — Robustez do Grid Search · Quant AI 2026</title>
 <style>{CSS}</style>
 </head>
 <body>
   <header class="card">
-    <h1>Robustez do Grid Search — superfície do objetivo (Sortino In-Sample)</h1>
+    <h1>CONTRAMARÉ — Robustez do Grid Search (superfície do Sortino In-Sample)</h1>
     <p class="sub">Dois cortes 2D da superfície de {len(grid)} combinações pela
     vizinhança do ótimo congelado (peso Mayer {fmt_num(params['peso_mayer'], 1)};
     cortes ±{fmt_num(params['b1'])} / ±{fmt_num(params['b2'])} /

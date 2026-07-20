@@ -1,0 +1,289 @@
+{
+  "janela": {
+    "inicio": "2018-05-01",
+    "fim": "2026-07-20",
+    "dias": 3002
+  },
+  "retornos_anuais": {
+    "2018": {
+      "estrategia_liq": -0.3159635405672294,
+      "buy_hold_liq": -0.5957669023646848,
+      "de": "2018-05-01",
+      "ate": "2018-12-31"
+    },
+    "2019": {
+      "estrategia_liq": 0.37899556593273753,
+      "buy_hold_liq": 0.9243153814875142,
+      "de": "2018-12-31",
+      "ate": "2019-12-31"
+    },
+    "2020": {
+      "estrategia_liq": 0.9344081448893964,
+      "buy_hold_liq": 3.03549820232836,
+      "de": "2019-12-31",
+      "ate": "2020-12-31"
+    },
+    "2021": {
+      "estrategia_liq": 0.2797485029108189,
+      "buy_hold_liq": 0.5968693176447069,
+      "de": "2020-12-31",
+      "ate": "2021-12-31"
+    },
+    "2022": {
+      "estrategia_liq": -0.2620297310359745,
+      "buy_hold_liq": -0.642780625640055,
+      "de": "2021-12-31",
+      "ate": "2022-12-31"
+    },
+    "2023": {
+      "estrategia_liq": 0.49359533306841086,
+      "buy_hold_liq": 1.5550421347795922,
+      "de": "2022-12-31",
+      "ate": "2023-12-31"
+    },
+    "2024": {
+      "estrategia_liq": 0.5929736667603722,
+      "buy_hold_liq": 1.2108120563334244,
+      "de": "2023-12-31",
+      "ate": "2024-12-31"
+    },
+    "2025": {
+      "estrategia_liq": -0.11177976680100754,
+      "buy_hold_liq": -0.06337376448659438,
+      "de": "2024-12-31",
+      "ate": "2025-12-31"
+    },
+    "2026": {
+      "estrategia_liq": -0.11883086162370626,
+      "buy_hold_liq": -0.25906794846107206,
+      "de": "2025-12-31",
+      "ate": "2026-07-20"
+    }
+  },
+  "janelas_de_crise": {
+    "covid_2020": {
+      "janela": "2020-02-01 -> 2020-04-30",
+      "dd_estrategia": -0.39833517811470265,
+      "dd_buy_hold": -0.5190811937486085
+    },
+    "ftx_2022": {
+      "janela": "2022-10-31 -> 2022-11-30",
+      "dd_estrategia": -0.08304565258552365,
+      "dd_buy_hold": -0.25832226598514985
+    },
+    "correcao_2026": {
+      "janela": "2026-01-01 -> 2026-07-20",
+      "dd_estrategia": -0.2008095619841791,
+      "dd_buy_hold": -0.39589798025377443
+    }
+  },
+  "information_ratio": {
+    "in_sample": {
+      "ir_canonico": -0.4823179304480504,
+      "tracking_error_anual": 0.37469459320237675,
+      "retorno_ativo_geometrico_aa": -0.009262642338749849,
+      "dias": 1705
+    },
+    "out_of_sample": {
+      "ir_canonico": -1.1403176891104825,
+      "tracking_error_anual": 0.2502138331911073,
+      "retorno_ativo_geometrico_aa": -0.2778679607195327,
+      "dias": 1296
+    }
+  },
+  "distribuicao_e_whipsaw": {
+    "pct_tempo_por_nivel": {
+      "-3": 0.054963,
+      "-2": 0.03431,
+      "-1": 0.054297,
+      "0": 0.755496,
+      "1": 0.032978,
+      "2": 0.021985,
+      "3": 0.045969
+    },
+    "n_rebalanceios": 534,
+    "rebalanceios_por_ano": 64.9711858760826,
+    "saltos_2niveis_ou_mais": 166,
+    "pct_saltos_2niveis": 0.31086142322097376
+  },
+  "payoff_extremos": {
+    "entradas_em_-3_euforia": {
+      "n_entradas": 44,
+      "fwd_30d": {
+        "n": 44,
+        "media": -0.025289607627987,
+        "mediana": -0.014942817132264308,
+        "pct_positivo": 0.5
+      },
+      "fwd_90d": {
+        "n": 41,
+        "media": 0.20279220233864115,
+        "mediana": 0.11454459437375797,
+        "pct_positivo": 0.6097560975609756
+      },
+      "fwd_180d": {
+        "n": 41,
+        "media": 0.3879851698394827,
+        "mediana": 0.12342940414354442,
+        "pct_positivo": 0.5121951219512195
+      }
+    },
+    "entradas_em_+3_panico": {
+      "n_entradas": 48,
+      "fwd_30d": {
+        "n": 48,
+        "media": 0.026781075793502546,
+        "mediana": 0.022429165361580683,
+        "pct_positivo": 0.625
+      },
+      "fwd_90d": {
+        "n": 48,
+        "media": 0.06388209267039495,
+        "mediana": 0.003983263650612523,
+        "pct_positivo": 0.5416666666666666
+      },
+      "fwd_180d": {
+        "n": 48,
+        "media": 0.2300979183258984,
+        "mediana": 0.2092438480959311,
+        "pct_positivo": 0.6666666666666666
+      }
+    }
+  },
+  "benchmark_estatico_50_50": {
+    "in_sample": {
+      "retorno_anualizado": 0.0739187318723229,
+      "volatilidade_anualizada": 0.44879843076356485,
+      "sharpe_rf0": 0.38429052295574495,
+      "sortino_mar0": 0.23402530664156956,
+      "calmar": 0.10962782983259753,
+      "max_drawdown": -0.6742697724218141,
+      "retorno_total": 0.3953228435132785,
+      "dias": 1705,
+      "beta_vs_buy_hold": 0.6097466107772198,
+      "exposicao_media_btc": 0.5990437055079986
+    },
+    "out_of_sample": {
+      "retorno_anualizado": 0.3462117361789623,
+      "volatilidade_anualizada": 0.4009144385883965,
+      "sharpe_rf0": 0.9413154660022139,
+      "sortino_mar0": 1.3183642780630629,
+      "calmar": 0.7007494132047435,
+      "max_drawdown": -0.494059259494245,
+      "retorno_total": 1.8736965446885758,
+      "dias": 1296,
+      "beta_vs_buy_hold": 0.8512603631305061,
+      "exposicao_media_btc": 0.852914076725335
+    }
+  },
+  "sensibilidade_custo_caixa": {
+    "custo_10bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.12356374988097496,
+        "sortino_mar0": 0.44150292907939864,
+        "max_drawdown": -0.4510203854232566
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.1913729013599006,
+        "sortino_mar0": 1.1391811431998242,
+        "max_drawdown": -0.3361199501239982
+      }
+    },
+    "custo_10bps_caixa_3pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.14107172261384338,
+        "sortino_mar0": 0.5046867119745005,
+        "max_drawdown": -0.4411855913911853
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.20884473769972534,
+        "sortino_mar0": 1.2459035764637598,
+        "max_drawdown": -0.32882580538900885
+      }
+    },
+    "custo_10bps_caixa_5pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.1526214403821713,
+        "sortino_mar0": 0.5464469777779931,
+        "max_drawdown": -0.43468706592490636
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.2203607496547353,
+        "sortino_mar0": 1.3164726144875665,
+        "max_drawdown": -0.32403253590895553
+      }
+    },
+    "custo_25bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.09863133042647121,
+        "sortino_mar0": 0.35170313322468755,
+        "max_drawdown": -0.4624716719759402
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.16138239497714735,
+        "sortino_mar0": 0.9566360867378765,
+        "max_drawdown": -0.34957054633034945
+      }
+    },
+    "custo_25bps_caixa_3pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.11574925776661127,
+        "sortino_mar0": 0.41325719124184856,
+        "max_drawdown": -0.4528441197594948
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.1784091225321478,
+        "sortino_mar0": 1.0598799161848953,
+        "max_drawdown": -0.3424247586453414
+      }
+    },
+    "custo_25bps_caixa_5pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.12704165748170504,
+        "sortino_mar0": 0.4539414994777435,
+        "max_drawdown": -0.44648255167664463
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.18963171711312632,
+        "sortino_mar0": 1.1281519224148961,
+        "max_drawdown": -0.3377289831863073
+      }
+    },
+    "custo_50bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.05825179753375753,
+        "sortino_mar0": 0.2069816947188571,
+        "max_drawdown": -0.48105313688083906
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.11300563430205868,
+        "sortino_mar0": 0.6649239203028542,
+        "max_drawdown": -0.3768976794513291
+      }
+    },
+    "custo_50bps_caixa_3pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.07473807331809534,
+        "sortino_mar0": 0.2658935513717479,
+        "max_drawdown": -0.47176178774711164
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.1293146293954186,
+        "sortino_mar0": 0.762550682615794,
+        "max_drawdown": -0.3645072583173411
+      }
+    },
+    "custo_50bps_caixa_5pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.08561376457948588,
+        "sortino_mar0": 0.3048334535347056,
+        "max_drawdown": -0.4656224014366669
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.14006409390292318,
+        "sortino_mar0": 0.827113359125846,
+        "max_drawdown": -0.3599697829225874
+      }
+    }
+  }
+}
