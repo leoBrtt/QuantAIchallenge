@@ -8,7 +8,7 @@ O objetivo do programa é simples de enunciar: **decidir, dia a dia, quanto do p
 
 ## Visão Geral: as 6 etapas do programa
 
-1. **Coletar e limpar os dados** (preço do BTC + índice de medo/ganância).
+1. **Coletar e limpar os dados** (preço do BTC + índice de medo/ganância + taxa Selic).
 2. **Calcular os dois indicadores** (Múltiplo de Mayer + Fear & Greed normalizado).
 3. **Combinar em um Score único e transformá-lo em Z-Score** (o "termômetro" da estratégia).
 4. **Traduzir o Z-Score em uma alocação** (quanto por cento em BTC, numa escala de 7 níveis).
@@ -34,9 +34,10 @@ Antes das etapas, três conceitos que se repetem e que explicam a maior parte da
 ## ETAPA 1 — Coleta e limpeza dos dados
 
 ### O que o programa faz
-Baixa duas séries temporais diárias:
+Baixa três séries temporais diárias:
 - **Preço do Bitcoin** (BTC-USD, fechamento diário) via `yfinance`, começando em **2017-01-01**.
 - **Crypto Fear & Greed Index** (FNG, um número de 0 a 100) via API da `Alternative.me`, que só existe a partir de **01/02/2018**.
+- **Taxa Selic anualizada** (Séries Temporais do Banco Central, série SGS 1178), usada para remunerar o caixa parado (Etapa 5), com histórico desde 2017-01-01.
 
 Na primeira vez que baixa, salva os dados brutos em CSV local (cache). A partir daí, o backtest sempre lê do cache.
 
@@ -52,9 +53,10 @@ Duas razões:
 O programa checa os dados brutos e **aborta com erro** se encontrar:
 - Preço menor ou igual a zero (impossível, indica dado corrompido).
 - Retorno diário com módulo acima de 60% (um salto assim quase sempre é erro de dado, não movimento real).
+- Selic fora do intervalo [0%, 60% a.a.] (um valor assim seria erro de dado, não a taxa real).
 - Datas duplicadas ou fora de ordem.
 
-Para dias em que o FNG está faltando, preenchemos com **forward-fill** (repete o último valor conhecido) — **nunca** para trás nem por interpolação.
+Para dias em que o FNG está faltando, preenchemos com **forward-fill** (repete o último valor conhecido) — **nunca** para trás nem por interpolação. A mesma regra vale para a Selic: o Banco Central só publica em dias úteis, então fins de semana e feriados repetem a última taxa vigente.
 
 ### Por que forward-fill e nunca "para trás"?
 Preencher um buraco de segunda-feira com o valor de terça-feira (`backfill`) ou interpolar entre os dois seria usar informação do futuro para decidir no passado — **look-ahead bias clássico**. O forward-fill só repete o que já era conhecido no momento, então é seguro.
@@ -193,11 +195,13 @@ O patrimônio é sempre **marcado a mercado**:
 ```
 patrimônio[t] = caixa[t] + quantidade_BTC[t] * preço[t]
 ```
-recalculado a cada rebalanceamento. O caixa **não rende juros** (0% ao ano).
+recalculado a cada rebalanceamento. O caixa **rende a taxa Selic vigente no dia** (capitalização diária, fator `(1 + selic_aa[t])^(1/365)`, coerente com a mesma anualização N=365 usada em todas as métricas), aplicada antes de marcar o patrimônio do dia — ou seja, o caixa de ontem já chega hoje com o rendimento overnight embutido.
 
 **Por que marcar a mercado em vez de encadear percentuais?** Encadear variações percentuais de preço isoladamente gera erros de composição quando a alocação muda no meio do caminho. Reconstruir o patrimônio a partir de "caixa + posição" a cada passo é a forma correta e à prova de erros.
 
-**Por que caixa a 0%?** É a hipótese **conservadora** (não estamos inflando o resultado com um rendimento de renda fixa otimista) e evita ter que buscar mais uma fonte de dados (taxa de juros histórica). A convenção desfavorece a estratégia (que carrega ~50% de caixa na média), nunca o benchmark. O efeito de remunerar o caixa a 3–5% a.a. foi quantificado como estudo de sensibilidade com parâmetros congelados (Seção 10 do relatório): ~+0,5–0,6 p.p./ano por ponto de taxa, sem alterar nenhuma conclusão qualitativa.
+**Por que Selic, e de onde vem o dado?** A Selic anualizada (Séries Temporais do Banco Central, série SGS 1178, "Selic anualizada base 252") é baixada e cacheada localmente do mesmo jeito que o preço do BTC e o FNG — point-in-time, com forward-fill apenas nos dias sem publicação (fins de semana e feriados). É a taxa que um gestor brasileiro efetivamente conseguiria no caixa parado (Tesouro Selic/CDI), então é mais realista do que assumir 0% — mas é importante entender a limitação: o BTC é cotado em dólar e a Selic é uma taxa em reais, e o motor **não faz nenhuma conversão ou hedge cambial** entre os dois. Isso significa que parte do retorno da estratégia agora vem do prêmio da taxa brasileira sobre uma taxa equivalente em dólar — uma simplificação declarada, não uma fonte de alpha do sinal. O relatório técnico (Seções 2, 10 e 11) quantifica esse efeito comparando lado a lado com a convenção anterior (caixa a 0%).
+
+**Por que a remuneração do caixa não entra no Grid Search?** Para não misturar duas decisões diferentes: a escolha dos 4 parâmetros do sinal (feita e congelada com caixa a 0%, preservando o processo de otimização já auditado) e a escolha de convenção de reporte do caixa (decidida depois, sem reabrir a otimização). A Selic entra só na simulação final, com os parâmetros já congelados — nunca dentro do loop que os escolheu.
 
 ---
 

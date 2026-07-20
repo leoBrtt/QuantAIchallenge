@@ -18,10 +18,13 @@ Conteúdo:
   5. Payoff dos extremos: retorno forward do BTC (30/90/180d) após entradas
      em −3 (venda por euforia) e +3 (compra por pânico).
   6. Benchmark estático 50/50: o MESMO motor com sinal constante 0 (compra 50%
-     no primeiro dia e deixa derivar — regra fixada a priori), p/ separar
-     quanto do resultado vem da exposição média e quanto vem do timing.
-  7. Sensibilidade pós-fato: custo (10/25/50 bps) × caixa remunerado
-     (0/3/5% a.a.), com o sinal congelado — estudo de robustez, não re-tuning.
+     no primeiro dia e deixa derivar — regra fixada a priori), com a MESMA
+     remuneração de caixa pela Selic da estratégia oficial (comparação justa),
+     p/ separar quanto do resultado vem da exposição média e quanto vem do
+     timing.
+  7. Sensibilidade pós-fato: custo (10/25/50 bps) × política de caixa (0% —
+     convenção anterior à mudança de regra — vs. Selic real point-in-time),
+     com o sinal congelado — estudo de robustez, não re-tuning.
 
 Saídas:
   resultados/analise_resultados.json   (todos os números consumidos no relatório)
@@ -54,13 +57,12 @@ JANELAS_CRISE = {
 
 HORIZONTES_FWD = (30, 90, 180)             # dias corridos p/ payoff dos extremos
 GRID_CUSTOS_BPS = (10, 25, 50)             # sensibilidade de custo
-GRID_CAIXA_AA = (0.00, 0.03, 0.05)         # sensibilidade de remuneração do caixa
 
 
 def carregar_serie() -> pd.DataFrame:
     serie = pd.read_csv(ARQ_SERIE, index_col="Date", parse_dates=True)
     obrigatorias = {"close", "escala_sinal", "escala_exec", "rebalanceou",
-                    "equity_liq", "equity_bh_liq"}
+                    "equity_liq", "equity_bh_liq", "selic_aa"}
     faltando = obrigatorias - set(serie.columns)
     if faltando:
         raise ValueError(f"serie_backtest.csv sem colunas {faltando} — rodar backtest.py antes.")
@@ -185,11 +187,13 @@ def payoff_extremos(serie: pd.DataFrame) -> dict:
 def benchmark_estatico(serie: pd.DataFrame) -> dict:
     """Regra fixada a priori: sinal constante 0 (=> 50% BTC no primeiro dia
     executável) no MESMO motor — mesma convenção T+1, mesmo custo, mesma data
-    de início. Como a escala nunca muda, a carteira compra uma vez e deriva.
+    de início e a MESMA remuneração de caixa pela Selic da estratégia oficial
+    (senão a comparação misturaria efeito de timing com efeito de política de
+    caixa). Como a escala nunca muda, a carteira compra uma vez e deriva.
     Separa a contribuição da exposição média (dosagem) da do timing (sinal)."""
     close = serie["close"]
     sinal_zero = pd.Series(0.0, index=close.index)
-    carteira = simular_carteira(close, sinal_zero, CUSTO_TAXA)
+    carteira = simular_carteira(close, sinal_zero, CUSTO_TAXA, serie["selic_aa"])
     resultado = {}
     for periodo, janela in (("in_sample", janela_is), ("out_of_sample", janela_oos)):
         eq = janela(carteira["equity"])
@@ -201,43 +205,22 @@ def benchmark_estatico(serie: pd.DataFrame) -> dict:
 
 
 # ----------------------------------------------------------------------------
-# 7. Sensibilidade custo × caixa (sinal congelado — pós-fato, não re-tuning)
+# 7. Sensibilidade custo × política de caixa (sinal congelado — não re-tuning)
 # ----------------------------------------------------------------------------
-def simular_com_caixa_remunerado(close: pd.Series, escala_sinal: pd.Series,
-                                 custo_taxa: float, taxa_caixa_aa: float) -> pd.Series:
-    """Réplica exata de backtest.simular_carteira com um único acréscimo:
-    o caixa (quando positivo) rende `taxa_caixa_aa` capitalizada diariamente
-    (fator (1+taxa)^(1/365), coerente com N=365). O sinal NUNCA é recalculado."""
-    precos = close.to_numpy(dtype=float)
-    sinal_ontem = escala_sinal.shift(1).to_numpy(dtype=float)
-    fator_diario = (1.0 + taxa_caixa_aa) ** (1.0 / N_ANUALIZACAO)
-    n = len(precos)
-    equity = np.empty(n)
-    caixa, qtd_btc = 1.0, 0.0
-    escala_atual = -3
-    for t in range(n):
-        if caixa > 0:
-            caixa *= fator_diario
-        patrimonio = caixa + qtd_btc * precos[t]
-        s = sinal_ontem[t]
-        if not np.isnan(s) and int(s) != escala_atual:
-            alvo_btc = ((int(s) + 3) / 6.0) * patrimonio
-            custo = abs(alvo_btc - qtd_btc * precos[t]) * custo_taxa
-            qtd_btc = alvo_btc / precos[t]
-            caixa = patrimonio - alvo_btc - custo
-            escala_atual = int(s)
-        equity[t] = caixa + qtd_btc * precos[t]
-    return pd.Series(equity, index=close.index)
-
-
 def sensibilidade_custo_caixa(serie: pd.DataFrame) -> dict:
+    """Reusa backtest.simular_carteira (motor oficial, sem reimplementação) sob
+    custos mais severos (25/50 bps) e comparando as duas políticas de caixa: a
+    convenção anterior (0%, para dimensionar o efeito da mudança de regra) e a
+    Selic real point-in-time (padrão atual). Nenhum parâmetro do sinal muda."""
     close = serie["close"]
     escala_sinal = serie["escala_sinal"]
+    selic_real = serie["selic_aa"]
+    politicas_caixa = {"0pct": None, "selic_real": selic_real}
     resultado = {}
     for bps in GRID_CUSTOS_BPS:
-        for taxa in GRID_CAIXA_AA:
-            eq = simular_com_caixa_remunerado(close, escala_sinal, bps / 10000.0, taxa)
-            chave = f"custo_{bps}bps_caixa_{int(taxa * 100)}pct"
+        for rotulo_caixa, selic_arg in politicas_caixa.items():
+            eq = simular_carteira(close, escala_sinal, bps / 10000.0, selic_arg)["equity"]
+            chave = f"custo_{bps}bps_caixa_{rotulo_caixa}"
             resultado[chave] = {
                 periodo: {
                     "retorno_anualizado": calcular_metricas(janela(eq))["retorno_anualizado"],

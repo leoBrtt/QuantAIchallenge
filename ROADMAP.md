@@ -111,3 +111,17 @@ Este documento é o nosso checklist vivo. Aqui anotamos o que já foi definido e
 - [x] **Fluxo de um clique atualizado:** `atualizar.sh` agora roda `backtest.py --atualizar` → `analise_resultados.py` → `gerar_graficos.py`, mantendo todos os artefatos sincronizados com o mesmo cache.
 - [x] **Autoavaliação (`Gaivota.md`) reauditada** com os números recalculados sobre o cache de 20/07.
 - ⚠️ **Continua deliberadamente NÃO feito:** ampliar o grid (ótimo na borda `b3 = 2,00` segue como limitação declarada), trocar função-objetivo, reexecutar OOS com variação de sinal, ou qualquer forma de re-tuning.
+
+---
+
+## FASE 6: Caixa Remunerado pela Selic Brasileira [CONCLUÍDA em 20/07/2026]
+*Mudança de regra solicitada diretamente: o caixa parado passa a render a Selic vigente em cada período, em vez de 0% a.a. Implementada como upgrade da simulação final — o Grid Search (Fase 3) permanece intocado, rodando com caixa a 0%, para que os parâmetros já congelados (`Peso_Mayer=0,3`, `b1=1,50`, `b2=1,75`, `b3=2,00`) não fossem reotimizados.*
+
+- [x] **Nova fonte de dados point-in-time:** Taxa Selic anualizada (Séries Temporais do Banco Central, SGS 1178, "% a.a. base 252"), baixada e cacheada em `dados/selic_raw.csv` do mesmo jeito que BTC/FNG; forward-fill apenas para fins de semana/feriados sem publicação; sanity check adicional (Selic ∈ [0%, 60% a.a.]).
+- [x] **`simular_carteira` (backtest.py) ganhou parâmetro opcional `selic_aa`:** quando informado, o caixa positivo capitaliza diariamente à Selic do dia (fator `(1+selic_aa[t])^(1/365)`) ANTES de marcar o patrimônio. Deixado em `None` (comportamento idêntico ao motor original) nas chamadas do Grid Search — só a simulação final (`executar_backtest_final`) passa a série real.
+- [x] **Reprodutibilidade confirmada:** hash MD5 de `metricas.json`/`parametros_otimos.json` idêntico entre execuções; parâmetros congelados do Grid Search bit a bit idênticos aos da Fase 3/5 (Sortino IS = 0,4415, exposição média = 47,0%, 280 rebalanceios) — a mudança de regra não tocou a otimização.
+- [x] **Efeito nos números oficiais (Selic vs. convenção anterior de 0%):** IS passa a vencer o Buy & Hold também em retorno absoluto (16,14% vs. 13,29% a.a., antes 12,36% vs. 13,28%) e em Sharpe; no OOS, o Sortino da estratégia (1,601) passa a superar o do Buy & Hold (1,555) no custo-base de 10 bps — inversão que a Seção 10 do relatório mostra ser sensível ao custo de execução (desaparece a 25+ bps).
+- [x] **`analise_resultados.py` atualizado:** `benchmark_estatico` e `sensibilidade_custo_caixa` passam a usar a Selic real (via `backtest.simular_carteira`, sem reimplementação) em vez de taxas fixas hipotéticas de 3%/5%; a comparação 0% vs. Selic real substitui a antiga grade de cenários hipotéticos.
+- [x] **Limitação declarada com destaque (Seção 11 do relatório, item 1):** BTC é cotado em dólar, Selic é taxa em reais — sem conversão/hedge cambial. Parte do ganho de retorno absoluto e da inversão de Sortino no OOS reflete o prêmio da taxa doméstica sobre uma equivalente em dólar, não geração de alpha pelo sinal.
+- [x] **`CLAUDE.md` §3–§4 atualizado** com a nova regra do caixa e a nova fonte de dados point-in-time; `RELATORIO_CONTRAMARE.md` (v1.2), `Explicação.md`, `Gaivota.md` e `gerar_graficos.py` (textos do painel e do heatmap) propagados.
+- ⚠️ **Deliberadamente não feito:** hedge cambial ou comparação com taxa em dólar (fica como próximo passo, Seção 12 do relatório); reotimização de qualquer parâmetro do sinal.

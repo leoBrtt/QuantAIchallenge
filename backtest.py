@@ -6,7 +6,8 @@ Estratégia contrarian de alocação dinâmica BTC/Caixa em 7 níveis, dirigida 
 Z-Score móvel (90d) do Score Combinado (Múltiplo de Mayer + Fear & Greed Index).
 
 Regras de blindagem implementadas (CLAUDE.md §2–§6):
-  - Dados point-in-time: cache local dos CSVs brutos; forward-fill apenas no FNG.
+  - Dados point-in-time: cache local dos CSVs brutos; forward-fill apenas no FNG
+    e na Selic (fins de semana/feriados sem publicação do BCB).
   - Sanity check dos dados brutos ANTES de qualquer métrica (aborta em violação).
   - Convenção T+1 única: retorno_estrategia[t] = w_sinal[t-2] * r[t]
     (sinal no close de D -> execução no close de D+1 -> captura a partir de D+2);
@@ -17,6 +18,10 @@ Regras de blindagem implementadas (CLAUDE.md §2–§6):
     a escala anterior (nunca divide por ~zero).
   - Rebalanceamento somente na mudança de nível da escala; equity marcada a
     mercado (caixa + qtd_BTC * preço), reportada com e sem custos.
+  - Caixa remunerado pela Selic vigente no dia (SGS/BCB 1178, point-in-time,
+    capitalização diária) — só na simulação final congelada (Módulo 6); o Grid
+    Search (Módulo 5) roda com caixa a 0% para preservar os parâmetros já
+    escolhidos sem reabrir a otimização.
   - Grid Search só no In-Sample (retornos até 31/12/2022); objetivo único
     pré-declarado = Sortino (MAR=0) com T+1 e custos dentro do loop; restrição
     de exposição média >= 25%; métricas N/A descartam a configuração.
@@ -25,7 +30,8 @@ Regras de blindagem implementadas (CLAUDE.md §2–§6):
   - Anualização única N=365 (BTC negocia 24/7); retorno anualizado geométrico.
 
 Saídas (consumidas pela Fase 4 / Plotly):
-  dados/btc_usd_raw.csv, dados/fng_raw.csv          (cache point-in-time)
+  dados/btc_usd_raw.csv, dados/fng_raw.csv,
+  dados/selic_raw.csv                               (cache point-in-time)
   resultados/serie_backtest.csv                     (série diária consolidada)
   resultados/grid_search_is.csv                     (superfície p/ heatmap)
   resultados/parametros_otimos.json                 (parâmetros congelados)
@@ -49,6 +55,8 @@ DIR_DADOS = "dados"
 DIR_RESULTADOS = "resultados"
 CACHE_BTC = os.path.join(DIR_DADOS, "btc_usd_raw.csv")
 CACHE_FNG = os.path.join(DIR_DADOS, "fng_raw.csv")
+CACHE_SELIC = os.path.join(DIR_DADOS, "selic_raw.csv")
+SERIE_BCB_SELIC = 1178              # SGS/BCB: "Taxa de juros - Selic anualizada base 252"
 
 DATA_INICIO_PRECO = "2017-01-01"   # warm-up da SMA 200 (FNG só existe de 2018-02-01)
 FIM_IN_SAMPLE = pd.Timestamp("2022-12-31")   # IS/OOS atribuído pela data do retorno
@@ -58,6 +66,7 @@ GUARDA_STD = 1e-8                  # std móvel abaixo disso -> mantém escala a
 CUSTO_TAXA = 0.001                 # 10 bps sobre o valor negociado, no dia da execução
 N_ANUALIZACAO = 365                # BTC negocia 24/7 — nunca 252/238
 LIMITE_RETORNO_DIARIO = 0.60       # sanity check: |r| >= 60% aborta
+LIMITE_SELIC_AA = 0.60             # sanity check: Selic >= 60% a.a. aborta (dado corrompido)
 
 # Grid grosso e determinístico (§6): 4 parâmetros, poucas centenas de combinações.
 GRID_PESO_MAYER = np.round(np.arange(0.0, 1.0001, 0.1), 2)          # passo 0,1
@@ -117,7 +126,25 @@ def baixar_fng() -> None:
     _mesclar_com_cache(df, CACHE_FNG).to_csv(CACHE_FNG)
 
 
-def sanity_check(close: pd.Series, fng: pd.Series) -> None:
+def baixar_selic() -> None:
+    """Baixa a série histórica da Selic anualizada (SGS/BCB série 1178) e
+    congela o CSV bruto. Fonte oficial e pública (Banco Central do Brasil),
+    já em % a.a. — dispensa conversão de taxa diária para anual."""
+    resp = requests.get(
+        f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{SERIE_BCB_SELIC}/dados",
+        params={"formato": "json", "dataInicial": "01/01/2017"}, timeout=60)
+    resp.raise_for_status()
+    registros = resp.json()
+    df = pd.DataFrame({
+        "Date": pd.to_datetime([r["data"] for r in registros], format="%d/%m/%Y"),
+        "selic_aa": pd.to_numeric([r["valor"] for r in registros]) / 100.0,
+    }).sort_values("Date").set_index("Date")
+    if df.empty:
+        raise ValueError("Download da Selic via BCB/SGS retornou vazio.")
+    _mesclar_com_cache(df, CACHE_SELIC).to_csv(CACHE_SELIC)
+
+
+def sanity_check(close: pd.Series, fng: pd.Series, selic: pd.Series) -> None:
     """Aborta com erro explícito em dado corrompido — roda ANTES de qualquer métrica."""
     if not close.index.is_unique or not close.index.is_monotonic_increasing:
         raise ValueError("SANITY: datas de preço duplicadas ou fora de ordem.")
@@ -132,6 +159,11 @@ def sanity_check(close: pd.Series, fng: pd.Series) -> None:
         raise ValueError("SANITY: datas de FNG duplicadas ou fora de ordem.")
     if ((fng_bruto < 0) | (fng_bruto > 100)).any():
         raise ValueError("SANITY: FNG fora do intervalo [0, 100].")
+    selic_bruta = selic.dropna()
+    if not selic_bruta.index.is_unique or not selic_bruta.index.is_monotonic_increasing:
+        raise ValueError("SANITY: datas de Selic duplicadas ou fora de ordem.")
+    if ((selic_bruta < 0) | (selic_bruta >= LIMITE_SELIC_AA)).any():
+        raise ValueError(f"SANITY: Selic fora do intervalo [0%, {LIMITE_SELIC_AA:.0%}] a.a.")
 
 
 def carregar_dados(atualizar: bool = False) -> pd.DataFrame:
@@ -145,16 +177,25 @@ def carregar_dados(atualizar: bool = False) -> pd.DataFrame:
         baixar_btc()
     if atualizar or not os.path.exists(CACHE_FNG):
         baixar_fng()
+    if atualizar or not os.path.exists(CACHE_SELIC):
+        baixar_selic()
 
     btc = pd.read_csv(CACHE_BTC, index_col="Date", parse_dates=True)
     fng = pd.read_csv(CACHE_FNG, index_col="Date", parse_dates=True)
+    selic = pd.read_csv(CACHE_SELIC, index_col="Date", parse_dates=True)
 
     dados = pd.DataFrame({"close": btc["Close"]})
     # Reindexação no calendário do preço + forward-fill APENAS (bfill/interpolação
     # usariam informação do futuro — look-ahead). Antes de 2018-02-01 o FNG fica NaN.
     dados["fng"] = fng["fng"].reindex(dados.index).ffill()
+    # Selic: publicação do BCB só em dias úteis; forward-fill cobre fins de
+    # semana/feriados com a última taxa vigente (mesma regra anti-leakage do
+    # FNG). O 1º dia da série de preço (2017-01-01, feriado) fica sem taxa
+    # anterior para repetir — fica NaN e a carteira simplesmente não rende
+    # juros nesse dia isolado, muito antes da janela avaliada (~mai/2018).
+    dados["selic_aa"] = selic["selic_aa"].reindex(dados.index).ffill()
 
-    sanity_check(dados["close"], fng["fng"])
+    sanity_check(dados["close"], fng["fng"], selic["selic_aa"])
     return dados
 
 
@@ -200,7 +241,8 @@ def mapear_escala(score_z: pd.Series, b1: float, b2: float, b3: float) -> pd.Ser
 # MÓDULO 3 — MOTOR DE CARTEIRA (T+1, custos, equity marcada a mercado)
 # ============================================================================
 def simular_carteira(close: pd.Series, escala_sinal: pd.Series,
-                     custo_taxa: float) -> pd.DataFrame:
+                     custo_taxa: float,
+                     selic_aa: pd.Series | None = None) -> pd.DataFrame:
     """
     Simula a carteira na janela avaliada (1º índice = primeiro dia com sinal
     válido). Convenção T+1 do §4: o sinal do fechamento de D é executado no
@@ -210,10 +252,21 @@ def simular_carteira(close: pd.Series, escala_sinal: pd.Series,
     Loop explícito (e não encadeamento de percentuais) porque a equity é
     marcada a mercado: patrimonio = caixa + qtd_BTC * preço, recalculado a cada
     rebalanceamento (§4). Rebalanceia SOMENTE quando a escala muda de nível.
+
+    `selic_aa` (opcional, §3): quando informada, o caixa positivo rende a
+    Selic vigente no dia (capitalização diária, fator (1+selic_aa[t])^(1/365),
+    coerente com N=365), aplicada ANTES de marcar o patrimônio do dia — ou
+    seja, o caixa de t-1 já chega em t com o rendimento overnight embutido.
+    Dias sem taxa (NaN, só ocorre fora da janela avaliada) não rendem juros.
+    Deixado em None (padrão), o caixa não rende — comportamento idêntico ao
+    motor original, usado propositalmente no Grid Search (Módulo 5) para
+    preservar os parâmetros já congelados sem reabrir a otimização.
     """
     precos = close.to_numpy(dtype=float)
     sinal_ontem = escala_sinal.shift(1).to_numpy(dtype=float)
     n = len(precos)
+    fator_selic = (None if selic_aa is None else
+                  (1.0 + selic_aa.to_numpy(dtype=float)) ** (1.0 / N_ANUALIZACAO))
 
     equity = np.empty(n)
     w_exec = np.empty(n)
@@ -225,6 +278,8 @@ def simular_carteira(close: pd.Series, escala_sinal: pd.Series,
     escala_atual = -3                      # estado inicial: 100% caixa (w_BTC = 0)
 
     for t in range(n):
+        if fator_selic is not None and caixa > 0 and not np.isnan(fator_selic[t]):
+            caixa *= fator_selic[t]
         patrimonio = caixa + qtd_btc * precos[t]   # captura r[t] com o peso antigo
         s = sinal_ontem[t]
         if not np.isnan(s) and int(s) != escala_atual:
@@ -397,12 +452,19 @@ def executar_backtest_final(dados: pd.DataFrame, params: dict) -> tuple[pd.DataF
 
     close = sinais.loc[primeiro_z:, "close"]
     escala_j = escala.loc[primeiro_z:]
+    selic_j = sinais.loc[primeiro_z:, "selic_aa"]
     sinal_bh = pd.Series(float(ESCALA_BUY_HOLD), index=close.index)
 
-    estrategia = simular_carteira(close, escala_j, CUSTO_TAXA)
-    estrategia_bruta = simular_carteira(close, escala_j, 0.0)
-    buy_hold = simular_carteira(close, sinal_bh, CUSTO_TAXA)
-    buy_hold_bruto = simular_carteira(close, sinal_bh, 0.0)
+    # Remuneração do caixa pela Selic (§3) entra SÓ nesta simulação final, já
+    # com os parâmetros congelados pelo Grid Search — que continua rodando com
+    # caixa a 0% (Módulo 5) para preservar exatamente os parâmetros já
+    # escolhidos. Aplicada igualmente à estratégia e ao Buy & Hold (mesma
+    # régua, §2 regra 13), embora no B&H o caixa fique perto de zero o tempo
+    # todo por desenho (sinal constante +3).
+    estrategia = simular_carteira(close, escala_j, CUSTO_TAXA, selic_j)
+    estrategia_bruta = simular_carteira(close, escala_j, 0.0, selic_j)
+    buy_hold = simular_carteira(close, sinal_bh, CUSTO_TAXA, selic_j)
+    buy_hold_bruto = simular_carteira(close, sinal_bh, 0.0, selic_j)
 
     serie = sinais.loc[primeiro_z:].copy()
     serie["escala_sinal"] = escala_j

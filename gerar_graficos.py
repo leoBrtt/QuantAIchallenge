@@ -515,9 +515,9 @@ def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
         f"Peso Mayer <b>{fmt_num(peso_m, 1)}</b> · Peso FNG <b>{fmt_num(1 - peso_m, 1)}</b> · "
         f"cortes do Z-Score <b>±{fmt_num(params['b1'])} / ±{fmt_num(params['b2'])} / "
         f"±{fmt_num(params['b3'])}</b><br>"
-        f"Execução T+1 · custo 10 bps por rebalanceamento · caixa a 0% a.a. · "
-        f"anualização N=365 · janela avaliada {fmt_data(serie.index[0])} → "
-        f"{fmt_data(serie.index[-1])} (warm-up excluído)")
+        f"Execução T+1 · custo 10 bps por rebalanceamento · caixa remunerado à "
+        f"Selic vigente (BCB/SGS) · anualização N=365 · janela avaliada "
+        f"{fmt_data(serie.index[0])} → {fmt_data(serie.index[-1])} (warm-up excluído)")
 
     notas = f"""
       <li><b>Convenção T+1 única:</b> sinal no fechamento de D, execução no fechamento
@@ -536,6 +536,14 @@ def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
           as rebaseia num capital inicial comum no primeiro dia da janela exibida —
           nenhuma métrica é recalculada; anualização geométrica N=365, idêntica
           ao motor.</li>
+      <li><b>Caixa remunerado à Selic (§3):</b> o caixa parado rende a taxa Selic
+          brasileira vigente em cada dia (BCB/SGS 1178, point-in-time, capitalização
+          diária) — dado real, não estimado. Como o BTC é cotado em USD e a Selic é
+          uma taxa em reais, isso modela o caixa como se fosse uma aplicação
+          doméstica (Tesouro Selic/CDI) sem qualquer conversão ou hedge cambial:
+          simplificação declarada, que infla o retorno frente a um cenário de caixa
+          em dólar. A remuneração entra só na simulação final; o Grid Search roda
+          com caixa a 0% para preservar os parâmetros já congelados.</li>
       <li><b>Caveat honesto (§6):</b> 2018–2022 contém ≈1,5 ciclo de BTC — poucas
           observações independentes. A robustez dos parâmetros é defendida pela
           vizinhança do ótimo: <code>resultados/heatmap_robustez.html</code>.</li>
