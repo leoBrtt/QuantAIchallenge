@@ -70,6 +70,21 @@ ESCALA_BUY_HOLD = 3                # +3 => w_BTC = 100% (benchmark passa pelo me
 # ============================================================================
 # MÓDULO 1 — DADOS E CACHE (point-in-time, anti-leakage)
 # ============================================================================
+def _mesclar_com_cache(novo: pd.DataFrame, caminho: str) -> pd.DataFrame:
+    """
+    Atualização do cache point-in-time sem reescrever história: valores já
+    congelados sempre prevalecem sobre o download novo; este só anexa datas
+    novas e preenche datas que faltavam no cache (lacunas do provedor). Exceção
+    única: o último candle cacheado, possivelmente parcial (BTC negocia 24/7),
+    é substituído pela versão fechada.
+    """
+    if not os.path.exists(caminho):
+        return novo
+    antigo = pd.read_csv(caminho, index_col="Date", parse_dates=True)
+    congelado = antigo.iloc[:-1]
+    return congelado.combine_first(novo).sort_index()[antigo.columns]
+
+
 def baixar_btc() -> None:
     """Baixa BTC-USD diário e congela o CSV bruto (só roda se não houver cache)."""
     import yfinance as yf
@@ -82,7 +97,7 @@ def baixar_btc() -> None:
         df.columns = df.columns.get_level_values(0)
     df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
     df.index.name = "Date"
-    df.to_csv(CACHE_BTC)
+    _mesclar_com_cache(df, CACHE_BTC).to_csv(CACHE_BTC)
 
 
 def baixar_fng() -> None:
@@ -99,7 +114,7 @@ def baixar_fng() -> None:
     }).sort_values("Date").set_index("Date")
     if df.empty:
         raise ValueError("Download do FNG via Alternative.me retornou vazio.")
-    df.to_csv(CACHE_FNG)
+    _mesclar_com_cache(df, CACHE_FNG).to_csv(CACHE_FNG)
 
 
 def sanity_check(close: pd.Series, fng: pd.Series) -> None:
@@ -119,12 +134,16 @@ def sanity_check(close: pd.Series, fng: pd.Series) -> None:
         raise ValueError("SANITY: FNG fora do intervalo [0, 100].")
 
 
-def carregar_dados() -> pd.DataFrame:
-    """Garante o cache, valida os brutos e devolve o painel diário alinhado."""
+def carregar_dados(atualizar: bool = False) -> pd.DataFrame:
+    """Garante o cache, valida os brutos e devolve o painel diário alinhado.
+
+    Com atualizar=True, baixa os dados de novo e anexa apenas as datas novas ao
+    cache (o histórico já congelado permanece intacto — ver _mesclar_com_cache).
+    """
     os.makedirs(DIR_DADOS, exist_ok=True)
-    if not os.path.exists(CACHE_BTC):
+    if atualizar or not os.path.exists(CACHE_BTC):
         baixar_btc()
-    if not os.path.exists(CACHE_FNG):
+    if atualizar or not os.path.exists(CACHE_FNG):
         baixar_fng()
 
     btc = pd.read_csv(CACHE_BTC, index_col="Date", parse_dates=True)
@@ -467,10 +486,14 @@ def imprimir_relatorio(otimo: dict, vizinhos: pd.DataFrame, metricas: dict) -> N
 # ORQUESTRAÇÃO
 # ============================================================================
 def main() -> None:
+    import sys
+
+    atualizar = "--atualizar" in sys.argv
     os.makedirs(DIR_RESULTADOS, exist_ok=True)
 
-    print("[1/4] Dados: cache point-in-time + sanity check...")
-    dados = carregar_dados()
+    print("[1/4] Dados: cache point-in-time + sanity check..."
+          + (" (atualizando cauda do cache)" if atualizar else ""))
+    dados = carregar_dados(atualizar)
     print(f"      {len(dados)} dias | {dados.index[0].date()} -> {dados.index[-1].date()}")
 
     print("[2/4] Grid Search In-Sample (T+1 + custos dentro do loop)...")

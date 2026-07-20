@@ -363,10 +363,142 @@ CSS = f"""
   .num {{ text-align: right; font-variant-numeric: tabular-nums; }}
   .destaque {{ font-weight: 650; }}
   .bonus {{ color: {COR['muted']}; font-size: 11px; font-weight: 400; }}
+  .periodo-card {{ position: sticky; top: 10px; z-index: 5;
+                  box-shadow: 0 8px 22px rgba(11,11,11,0.07); }}
+  .periodo-topo {{ display: flex; justify-content: space-between;
+                  align-items: flex-start; gap: 16px; flex-wrap: wrap;
+                  margin-bottom: 4px; }}
+  .capital-label {{ display: flex; align-items: center; gap: 8px;
+                   color: {COR['ink2']}; font-size: 12px; white-space: nowrap; }}
+  #capital-inicial {{ width: 110px; text-align: right; font: inherit;
+                     font-variant-numeric: tabular-nums; color: {COR['ink']};
+                     background: {COR['surface']}; border: 1px solid {COR['axis']};
+                     border-radius: 6px; padding: 4px 8px; }}
+  .chip {{ display: inline-block; width: 14px; height: 0; border-top: 3px solid;
+          border-radius: 2px; margin-right: 7px; vertical-align: middle; }}
+  .chip.tracejada {{ border-top-style: dashed; border-top-width: 2px; }}
   footer.card ul {{ margin: 8px 0 0 18px; color: {COR['ink2']};
                    font-size: 12.5px; line-height: 1.7; }}
   .plotly-card {{ padding: 8px 10px; }}
 """
+
+
+def painel_periodo_html(serie: pd.DataFrame) -> str:
+    """Cartão sticky "Desempenho na janela selecionada": reage ao zoom/seleção
+    do gráfico (evento `plotly_relayout`) e rebaseia as três séries num capital
+    inicial comum no primeiro dia da janela visível — assim o desempenho da
+    estratégia e do Buy & Hold é comparável em qualquer recorte de tempo.
+    Mostra capital inicial, capital final, retorno do período e retorno
+    anualizado (N=365, geométrico — mesma convenção do §5). Só LÊ as curvas
+    de equity já congeladas pelo motor — nenhuma métrica é recalculada."""
+    dados = {
+        "datas": [d.strftime("%Y-%m-%d") for d in serie.index],
+        "series": {chave: [round(float(v), 6) for v in serie[coluna]]
+                   for chave, coluna in (("liq", "equity_liq"),
+                                         ("bruta", "equity_bruta"),
+                                         ("bh", "equity_bh_liq"))},
+    }
+    linhas = []
+    for chave, chip, nome in (
+            ("liq", f'<span class="chip" style="border-color:{COR["estrategia"]}"></span>',
+             "Estratégia (líquida)"),
+            ("bruta", f'<span class="chip tracejada" style="border-color:{COR["estrategia"]}"></span>',
+             "Estratégia s/ custos"),
+            ("bh", f'<span class="chip" style="border-color:{COR["buyhold"]}"></span>',
+             "Buy &amp; Hold (líq.)")):
+        classe = " destaque" if chave == "liq" else ""
+        linhas.append(
+            f"<tr><td>{chip}{nome}</td>"
+            + "".join(f"<td class='num{classe}' id='{chave}-{campo}'>—</td>"
+                      for campo in ("antes", "depois", "ret", "aa")) + "</tr>")
+
+    return f"""
+  <section class="card periodo-card">
+    <div class="periodo-topo">
+      <div>
+        <h2>Desempenho na janela selecionada</h2>
+        <p class="periodo" id="periodo-datas">—</p>
+      </div>
+      <label class="capital-label">Capital inicial (US$)
+        <input id="capital-inicial" inputmode="numeric" value="100.000">
+      </label>
+    </div>
+    <table>
+      <thead><tr><th>Série</th><th class="num">Capital inicial</th>
+        <th class="num">Capital final</th>
+        <th class="num">Retorno no período</th><th class="num">Retorno anualizado</th></tr></thead>
+      <tbody>{''.join(linhas)}</tbody>
+    </table>
+    <p class="sub">Arraste uma área sobre o gráfico (zoom), use os botões de período
+    ou dê duplo clique para voltar à janela completa — a tabela acompanha a janela
+    exibida. As três séries partem do <b>mesmo capital inicial</b> no primeiro dia
+    da janela visível, permitindo comparar diretamente o desempenho da estratégia
+    e do Buy &amp; Hold em qualquer recorte de tempo. Anualização geométrica N=365;
+    janelas &lt; 30 dias não são anualizadas (—).</p>
+  </section>
+  <script id="dados-periodo" type="application/json">{json.dumps(dados, separators=(',', ':'))}</script>
+  <script>
+  (function () {{
+    "use strict";
+    var D = JSON.parse(document.getElementById("dados-periodo").textContent);
+    var T = D.datas.map(function (s) {{ return Date.parse(s + "T00:00:00Z"); }});
+    var fmtUSD = new Intl.NumberFormat("pt-BR",
+        {{style: "currency", currency: "USD", maximumFractionDigits: 0}});
+    var fmtPct = new Intl.NumberFormat("pt-BR",
+        {{style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1,
+          signDisplay: "exceptZero"}});
+    function el(id) {{ return document.getElementById(id); }}
+    function fmtDia(t) {{
+      var d = new Date(t);
+      return ("0" + d.getUTCDate()).slice(-2) + "/" +
+             ("0" + (d.getUTCMonth() + 1)).slice(-2) + "/" + d.getUTCFullYear();
+    }}
+    function capital() {{
+      var bruto = el("capital-inicial").value
+          .replace(/\\./g, "").replace(",", ".").replace(/[^\\d.]/g, "");
+      var v = parseFloat(bruto);
+      return (isFinite(v) && v > 0) ? v : 100000;
+    }}
+    function parseData(v) {{
+      return (typeof v === "number")
+          ? v : Date.parse(String(v).slice(0, 10) + "T00:00:00Z");
+    }}
+    function janela(gd) {{
+      var xa = (gd.layout || {{}}).xaxis || {{}};
+      if (!xa.range || xa.autorange) return [T[0], T[T.length - 1]];
+      return [parseData(xa.range[0]), parseData(xa.range[1])];
+    }}
+    function atualizar(gd) {{
+      var faixa = janela(gd);
+      var a = 0, b = T.length - 1;
+      while (a < T.length - 1 && T[a] < faixa[0]) a++;
+      while (b > 0 && T[b] > faixa[1]) b--;
+      if (b - a < 1) return;               // janela precisa de >= 2 pontos
+      var cap = capital();
+      var dias = Math.round((T[b] - T[a]) / 864e5);
+      el("periodo-datas").textContent =
+          fmtDia(T[a]) + " \\u2192 " + fmtDia(T[b]) + " \\u00b7 " + dias + " dias" +
+          ((a === 0 && b === T.length - 1) ? " \\u00b7 janela completa" : "");
+      ["liq", "bruta", "bh"].forEach(function (s) {{
+        var eq = D.series[s];
+        var ret = eq[b] / eq[a] - 1;
+        el(s + "-antes").textContent = fmtUSD.format(cap);
+        el(s + "-depois").textContent = fmtUSD.format(cap * (eq[b] / eq[a]));
+        el(s + "-ret").textContent = fmtPct.format(ret);
+        el(s + "-aa").textContent = (dias >= 30)
+            ? fmtPct.format(Math.pow(1 + ret, 365 / dias) - 1) : "\\u2014";
+      }});
+    }}
+    function ligar() {{
+      var gd = document.querySelector(".plotly-graph-div");
+      if (!gd || typeof gd.on !== "function") {{ setTimeout(ligar, 120); return; }}
+      gd.on("plotly_relayout", function () {{ atualizar(gd); }});
+      el("capital-inicial").addEventListener("input", function () {{ atualizar(gd); }});
+      atualizar(gd);
+    }}
+    ligar();
+  }})();
+  </script>"""
 
 
 def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
@@ -399,6 +531,11 @@ def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
           não é resetado na fronteira (janela causal olhando para trás não é leakage).</li>
       <li><b>Guardas numéricas (§5):</b> Sortino/Calmar com denominador zero são
           reportados como N/A — nunca substituídos por epsilon.</li>
+      <li><b>Painel "Desempenho na janela selecionada":</b> lê exclusivamente as
+          curvas de equity congeladas pelo motor (marcação a mercado dia a dia) e
+          as rebaseia num capital inicial comum no primeiro dia da janela exibida —
+          nenhuma métrica é recalculada; anualização geométrica N=365, idêntica
+          ao motor.</li>
       <li><b>Caveat honesto (§6):</b> 2018–2022 contém ≈1,5 ciclo de BTC — poucas
           observações independentes. A robustez dos parâmetros é defendida pela
           vizinhança do ótimo: <code>resultados/heatmap_robustez.html</code>.</li>
@@ -420,7 +557,8 @@ def montar_pagina(fig: go.Figure, metricas: dict, params: dict,
     <p class="sub">{subtitulo}</p>
   </header>
   <div class="grade">{tabela_metricas_html(metricas)}</div>
-  <section class="card plotly-card">{div_grafico}</section>
+  <div>{painel_periodo_html(serie)}
+  <section class="card plotly-card">{div_grafico}</section></div>
   <footer class="card">
     <h2>Notas metodológicas (blindagem anti-vieses)</h2>
     <ul>{notas}</ul>

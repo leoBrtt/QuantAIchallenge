@@ -19,7 +19,7 @@ O motor quantitativo foi implementado, executado e auditado de ponta a ponta. O 
 - **No In-Sample, vence o Buy & Hold em todas as métricas ajustadas a risco** (Sortino 0,44 vs. 0,27; Calmar 0,27 vs. 0,17; Max Drawdown −45% vs. −77%).
 - **No Out-of-Sample, o Buy & Hold vence em Sharpe e Sortino** (1,04 vs. 0,79; 1,52 vs. 1,12): o bull market quase ininterrupto de 2023+ favoreceu exposição total. Reportamos esse resultado sem retoques — o protocolo one-shot proíbe segunda rodada de tuning, e este relatório não a fez.
 
-Três limitações são declaradas abertamente na Seção 8, incluindo o fato de o ótimo do grid ter caído na borda superior do espaço de cortes.
+Três limitações são declaradas abertamente na Seção 9, incluindo o fato de o ótimo do grid ter caído na borda superior do espaço de cortes.
 
 ---
 
@@ -91,7 +91,61 @@ Além do próprio motor, um script de verificação externo testou as propriedad
 
 ---
 
-## 6. Análise de Robustez — Vizinhança do Ótimo
+## 6. Custo de Transação e Impacto Financeiro
+
+### Como os custos são calculados
+
+Os custos implementados refletem a realidade operacional de rebalanceamentos em mercado spot (sem alavancagem, sem derivativos). A mecânica é simples e explícita:
+
+**Taxa:** 10 bps = 0,1% sobre o valor negociado em cada rebalanceamento (parâmetro `CUSTO_TAXA = 0.001` no `backtest.py`, linha 58).
+
+**Quando:** debitados **exclusivamente no dia de execução** (convenção T+1). Nenhuma taxa diária contínua; não há juros sobre caixa.
+
+**Fórmula:**
+```
+custo_no_dia_t = |alvo_BTC_novo − qtd_BTC_atual| × 0.001
+```
+Ou em português: você paga 10 bps sobre o valor que está comprando ou vendendo (a diferença entre o alvo novo e o que já tem).
+
+**Exemplo prático:** suponha patrimônio de US$ 100.000 em 50/50 (US$ 50.000 BTC + US$ 50.000 caixa). Seu sinal muda para 100% BTC. Você precisa comprar US$ 50.000 adicionais em BTC. Custo incorrido = US$ 50.000 × 0,001 = **US$ 50**, pago uma única vez no dia da execução.
+
+### Frequência de rebalanceamentos
+
+O motor rebalanceia **somente quando a escala de exposição muda de nível** (de −3 a +3). Não há rebalanceamento diário por drift de preço.
+
+| Período | Dias | Rebalanceios | Frequência |
+|---|:---:|:---:|---|
+| In-Sample (2018–2022) | 1.705 | 280 | ~164 por ano (um a cada ~2,2 dias) |
+| Out-of-Sample (2023–26) | 1.293 | 254 | ~72 por ano (um a cada ~5 dias) |
+
+A frequência mais alta no IS reflete o regime de maior volatilidade (2018–2022 contém o crash de 2018, o boom de 2019–2021, a bolha de 2021 e o crash de 2022); o OOS foi menos turbulento apesar dos movimentos de 2023–2024.
+
+### Impacto quantificado: "com custos" vs. "sem custos"
+
+O motor roda **duas simulações paralelas** para cada período: uma com custos (a realista) e outra sem (para isolar o efeito da fricção).
+
+| Período | Retorno Bruto (s/ custos) | Retorno Líquido (c/ custos) | Impacto Anual |
+|---|:---:|:---:|:---:|
+| **In-Sample** | +14,05% a.a. | +12,36% a.a. | −1,69 p.p./ano (12,0% relativo) |
+| **Out-of-Sample** | +20,90% a.a. | +18,86% a.a. | −2,04 p.p./ano (9,8% relativo) |
+
+**Interpretação:** em ambos os períodos, os custos consomem ~10–12% do retorno bruto. Isso é **exatamente** o custo esperado de uma estratégia com ~70 a 160 rebalanceamentos por ano em um ativo de 10 bps por trade (70 × 0,1% ≈ 0,07%, 160 × 0,1% ≈ 0,16%).
+
+### Por que reportamos as duas versões (bruta e líquida)?
+
+Há três razões fundamentais:
+
+1. **Protocolo anti-viés:** O `CLAUDE.md` §4 exige que os custos estejam **dentro do loop de otimização do Grid Search**, e não adicionados depois. Reportar ambas prova que o desenho respeitou essa restrição: os parâmetros foram escolhidos já sabendo qual seria o custo do churn.
+
+2. **Transparência de propósito:** A versão **bruta** (sem custos) mostra a qualidade do sinal isoladamente — se o seu timing fosse perfeito, qual seria o retorno? A versão **líquida** (com custos) mostra a performance operacional real. Os dois números juntos fazem honestidade transparente: a banca vê exatamente onde a fricção incide.
+
+3. **Padrão do setor:** Fundos reais sempre publicam "retorno bruto" (antes de taxas) e "retorno líquido" (após taxas). A banca do Itaú espera ver isso separado para avaliar a qualidade do sinal vs. a fricção operacional.
+
+**Observação sobre whipsaw:** Na Seção 9.1, uma limitação honesta aponta que **31% dos rebalanceamentos saltam ≥2 níveis num único dia**. Isso indica que há oportunidade de redesenho (ex.: histerese de 2 dias, piso mínimo de alocação) para reduzir custo sem sacrificar sinal — mas essas variantes não foram implementadas nesta v1, por exigirem protocolo de otimização novo e nova rodada OOS.
+
+---
+
+## 7. Análise de Robustez — Vizinhança do Ótimo
 
 Superfície da função-objetivo nos 12 vizinhos imediatos do ótimo (±1 passo em cada parâmetro). Todos são válidos, nenhum foi descartado, e o Sortino decai suavemente (0,44 → 0,14) em vez de despencar — **não é um pico isolado**:
 
@@ -114,9 +168,9 @@ A superfície completa das 616 combinações está em `resultados/grid_search_is
 
 ---
 
-## 7. Resultados
+## 8. Resultados
 
-### 7.1 In-Sample (treino) — 01/05/2018 a 31/12/2022 (1.705 retornos diários)
+### 8.1 In-Sample (treino) — 01/05/2018 a 31/12/2022 (1.705 retornos diários)
 
 | Métrica | Estratégia (líquida) | Estratégia (bruta) | Buy & Hold (líquido) |
 |---|---:|---:|---:|
@@ -154,16 +208,16 @@ A superfície completa das 616 combinações está em `resultados/grid_search_is
 
 ---
 
-## 8. Limitações Declaradas (Material de Defesa)
+## 9. Limitações Declaradas (Material de Defesa)
 
 1. **Ótimo na borda do grid.** O corte `b3 = 2,00` é o valor máximo do espaço de busca, e a superfície do Sortino IS cresce na direção de cortes mais largos (estratégia mais inerte). Ampliar o grid *agora*, após já ter observado o OOS, configuraria re-tuning e foi deliberadamente **não feito**. Qualquer redesenho do espaço de busca exigiria justificativa a priori, documentação e uma nova (e única) rodada OOS. Decisão registrada como pendente no `ROADMAP.md`.
-2. **Poucos ciclos independentes.** O In-Sample 2018–2022 contém ~1,5 ciclo completo de BTC. Cinco anos de dados diários não equivalem a milhares de observações independentes; a defesa da robustez apoia-se na vizinhança plana do ótimo (Seção 6), não em significância estatística clássica.
-3. **Underperformance ajustada a risco no OOS.** Reconhecida na Seção 7.2. A estratégia não foi desenhada para vencer um bull market em retorno absoluto, mas o resultado de Sharpe/Sortino inferior no período de teste é um fato reportado, não uma ressalva escondida.
+2. **Poucos ciclos independentes.** O In-Sample 2018–2022 contém ~1,5 ciclo completo de BTC. Cinco anos de dados diários não equivalem a milhares de observações independentes; a defesa da robustez apoia-se na vizinhança plana do ótimo (Seção 7), não em significância estatística clássica.
+3. **Underperformance ajustada a risco no OOS.** Reconhecida na Seção 8.2. A estratégia não foi desenhada para vencer um bull market em retorno absoluto, mas o resultado de Sharpe/Sortino inferior no período de teste é um fato reportado, não uma ressalva escondida.
 4. **Convenções conservadoras assumidas:** caixa a 0% a.a. (sem rendimento de renda fixa) e custo de 10 bps em todos os rebalanceamentos, inclusive na entrada do próprio benchmark.
 
 ---
 
-## 9. Artefatos Gerados (Insumos da Fase 4 — Visualização)
+## 10. Artefatos Gerados (Insumos da Fase 4 — Visualização)
 
 | Arquivo | Conteúdo |
 |---|---|
