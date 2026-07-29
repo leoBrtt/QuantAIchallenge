@@ -1,0 +1,13 @@
+{
+  "peso_mayer": 0.0,
+  "peso_fng": 0.2,
+  "peso_funding": 0.8,
+  "b1": 0.5,
+  "b2": 1.5,
+  "b3": 2.0,
+  "sortino_is": -0.309385123123383,
+  "exposicao_media": -0.0219670244928157,
+  "exposicao_media_abs": 0.2639454698426367,
+  "n_rebalanceios": 665,
+  "n_recaps": 0
+}

@@ -1,0 +1,100 @@
+{
+  "in_sample": {
+    "estrategia_liquida": {
+      "retorno_anualizado": -0.004089728594416142,
+      "volatilidade_anualizada": 0.29778246359570587,
+      "sharpe_rf0": 0.13414763893034348,
+      "sortino_mar0": -0.020038726069485688,
+      "calmar": -0.007103681084130337,
+      "max_drawdown": -0.5757196228238087,
+      "retorno_total": -0.01896117844171985,
+      "dias": 1705
+    },
+    "estrategia_bruta": {
+      "retorno_anualizado": 0.05706454243578296,
+      "volatilidade_anualizada": 0.2975827260302468,
+      "sharpe_rf0": 0.3342372271674587,
+      "sortino_mar0": 0.2819249343771661,
+      "calmar": 0.10484821861794838,
+      "max_drawdown": -0.5442585786194216,
+      "retorno_total": 0.29593656633929255,
+      "dias": 1705
+    },
+    "buy_hold_liquido": {
+      "retorno_anualizado": 0.1328676101707884,
+      "volatilidade_anualizada": 0.704177565703739,
+      "sharpe_rf0": 0.5355187480898019,
+      "sortino_mar0": 0.2697380373784872,
+      "calmar": 0.17335447826001976,
+      "max_drawdown": -0.7664504055758868,
+      "retorno_total": 0.7909500509870886,
+      "dias": 1705
+    },
+    "buy_hold_bruto": {
+      "retorno_anualizado": 0.13300301766282585,
+      "volatilidade_anualizada": 0.7035951047976785,
+      "sharpe_rf0": 0.5355275026333938,
+      "sortino_mar0": 0.2702272139988958,
+      "calmar": 0.17355487031754807,
+      "max_drawdown": -0.7663456370856909,
+      "retorno_total": 0.7919502209615079,
+      "dias": 1705
+    },
+    "beta_vs_buy_hold": 0.01019175201568145,
+    "exposicao_media_btc": -0.021959820816316374,
+    "exposicao_media_abs": 0.2638853119977344,
+    "n_rebalanceios": 665,
+    "n_recaps": 0,
+    "inicio": "2018-05-01",
+    "fim": "2022-12-31"
+  },
+  "out_of_sample": {
+    "estrategia_liquida": {
+      "retorno_anualizado": 0.13355976109876977,
+      "volatilidade_anualizada": 0.2150813185473688,
+      "sharpe_rf0": 0.6906937635883575,
+      "sortino_mar0": 0.9183735819737432,
+      "calmar": 0.4922996872917182,
+      "max_drawdown": -0.27129767608328237,
+      "retorno_total": 0.5660535676638536,
+      "dias": 1306
+    },
+    "estrategia_bruta": {
+      "retorno_anualizado": 0.2133867145042978,
+      "volatilidade_anualizada": 0.21474106559653666,
+      "sharpe_rf0": 1.008432715250178,
+      "sortino_mar0": 1.4856853988868826,
+      "calmar": 0.836974636143861,
+      "max_drawdown": -0.25495003706136254,
+      "retorno_total": 0.9978191359282906,
+      "dias": 1306
+    },
+    "buy_hold_liquido": {
+      "retorno_anualizado": 0.46125989707057746,
+      "volatilidade_anualizada": 0.46825951730950066,
+      "sharpe_rf0": 1.0429353671153323,
+      "sortino_mar0": 1.5259293842040005,
+      "calmar": 0.8692534789859243,
+      "max_drawdown": -0.5306391153115495,
+      "retorno_total": 2.885155549826815,
+      "dias": 1306
+    },
+    "buy_hold_bruto": {
+      "retorno_anualizado": 0.46109059950760534,
+      "volatilidade_anualizada": 0.46817392091096055,
+      "sharpe_rf0": 1.0427940442133297,
+      "sortino_mar0": 1.5256166969604872,
+      "calmar": 0.8689987697431049,
+      "max_drawdown": -0.5305998300134692,
+      "retorno_total": 2.8835452115938045,
+      "dias": 1306
+    },
+    "beta_vs_buy_hold": 0.09285803388531029,
+    "exposicao_media_btc": 0.010487873613143931,
+    "exposicao_media_abs": 0.28161462349658467,
+    "n_rebalanceios": 583,
+    "n_recaps": 0,
+    "inicio": "2022-12-31",
+    "fim": "2026-07-29"
+  }
+}
