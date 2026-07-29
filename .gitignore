@@ -1,0 +1,28 @@
+# Referências externas (Qlib, PyPortfolioOpt) — não versionar
+referencias/
+
+# Dados brutos cacheados (yfinance + Alternative.me) — reprodutíveis via download
+*.csv
+
+# Saídas geradas pelo backtest (regeneráveis via backtest.py + gerar_graficos.py)
+backtest_*.html
+resultados/heatmap_robustez.html
+
+# Pacote de entrega montado localmente (regenerável) — não versionar
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# Ambiente / SO
+.DS_Store
+.env
+
+# Configuração local do Claude Code (específica da máquina)
+.claude/settings.local.json
+.vscode/
