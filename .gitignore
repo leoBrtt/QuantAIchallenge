@@ -6,7 +6,7 @@ referencias/
 
 # Saídas geradas pelo backtest (regeneráveis via backtest.py + gerar_graficos.py)
 backtest_*.html
-resultados/heatmap_robustez.html
+resultados/heatmap_robustez_*.html
 
 # Pacote de entrega montado localmente (regenerável) — não versionar
 
@@ -15,7 +15,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .ipynb_checkpoints/
-.venv/
+.venv
 venv/
 env/
 
