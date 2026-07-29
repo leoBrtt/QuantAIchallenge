@@ -1,0 +1,520 @@
+
+##########################################################################
+# PERFIL SPOT — série congelada: 2018-05-01 -> 2026-07-29 (3012 dias)
+##########################################################################
+{
+  "perfil": "spot",
+  "janela": {
+    "inicio": "2018-05-01",
+    "fim": "2026-07-29",
+    "dias": 3012
+  },
+  "retornos_anuais": {
+    "2018": {
+      "estrategia_liq": -0.3139371691353584,
+      "buy_hold_liq": -0.5956981930787185,
+      "de": "2018-05-01",
+      "ate": "2018-12-31"
+    },
+    "2019": {
+      "estrategia_liq": 0.533250660870374,
+      "buy_hold_liq": 0.9243153814875142,
+      "de": "2018-12-31",
+      "ate": "2019-12-31"
+    },
+    "2020": {
+      "estrategia_liq": 1.470776049680449,
+      "buy_hold_liq": 3.03549820232836,
+      "de": "2019-12-31",
+      "ate": "2020-12-31"
+    },
+    "2021": {
+      "estrategia_liq": 0.42472751530961483,
+      "buy_hold_liq": 0.5968693176447069,
+      "de": "2020-12-31",
+      "ate": "2021-12-31"
+    },
+    "2022": {
+      "estrategia_liq": -0.2916086843513831,
+      "buy_hold_liq": -0.642780625640055,
+      "de": "2021-12-31",
+      "ate": "2022-12-31"
+    },
+    "2023": {
+      "estrategia_liq": 0.6228729952597389,
+      "buy_hold_liq": 1.5550421347795922,
+      "de": "2022-12-31",
+      "ate": "2023-12-31"
+    },
+    "2024": {
+      "estrategia_liq": 0.7622971404629706,
+      "buy_hold_liq": 1.2108120563334244,
+      "de": "2023-12-31",
+      "ate": "2024-12-31"
+    },
+    "2025": {
+      "estrategia_liq": 0.03324580080974049,
+      "buy_hold_liq": -0.06337376448659415,
+      "de": "2024-12-31",
+      "ate": "2025-12-31"
+    },
+    "2026": {
+      "estrategia_liq": -0.09606891935720374,
+      "buy_hold_liq": -0.2656684256512559,
+      "de": "2025-12-31",
+      "ate": "2026-07-29"
+    }
+  },
+  "janelas_de_crise": {
+    "covid_2020": {
+      "janela": "2020-02-01 -> 2020-04-30",
+      "dd_estrategia": -0.29856970595887145,
+      "dd_buy_hold": -0.5190811937486084
+    },
+    "ftx_2022": {
+      "janela": "2022-10-31 -> 2022-11-30",
+      "dd_estrategia": -0.13510171101095392,
+      "dd_buy_hold": -0.25832226598515007
+    },
+    "correcao_2026": {
+      "janela": "2026-01-01 -> 2026-07-29",
+      "dd_estrategia": -0.1824280687905976,
+      "dd_buy_hold": -0.3958979802537743
+    }
+  },
+  "information_ratio": {
+    "in_sample": {
+      "ir_canonico": -0.2933526679511239,
+      "tracking_error_anual": 0.3617535110292892,
+      "retorno_ativo_geometrico_aa": 0.0964339837015975,
+      "dias": 1705
+    },
+    "out_of_sample": {
+      "ir_canonico": -0.7939131375700679,
+      "tracking_error_anual": 0.23077479955171193,
+      "retorno_ativo_geometrico_aa": -0.14526390722155358,
+      "dias": 1306
+    }
+  },
+  "distribuicao_e_whipsaw": {
+    "pct_tempo_por_nivel": {
+      "-3": 0.007304,
+      "-2": 0.014608,
+      "-1": 0.036189,
+      "0": 0.899734,
+      "1": 0.022908,
+      "2": 0.012284,
+      "3": 0.006972
+    },
+    "n_rebalanceios": 293,
+    "rebalanceios_por_ano": 35.542427764862175,
+    "saltos_2niveis_ou_mais": 73,
+    "pct_saltos_2niveis": 0.24914675767918087
+  },
+  "payoff_extremos": {
+    "entradas_em_-3_euforia": {
+      "n_entradas": 14,
+      "fwd_30d": {
+        "n": 14,
+        "media": -0.03002332366773896,
+        "mediana": -0.010844214837594068,
+        "pct_positivo": 0.35714285714285715
+      },
+      "fwd_90d": {
+        "n": 12,
+        "media": 0.11100637225571945,
+        "mediana": 0.1720842723201187,
+        "pct_positivo": 0.5833333333333334
+      },
+      "fwd_180d": {
+        "n": 10,
+        "media": 0.2827556380662647,
+        "mediana": -0.072330537089632,
+        "pct_positivo": 0.4
+      }
+    },
+    "entradas_em_+3_panico": {
+      "n_entradas": 16,
+      "fwd_30d": {
+        "n": 16,
+        "media": 0.07839187352110559,
+        "mediana": 0.031898615206690684,
+        "pct_positivo": 0.75
+      },
+      "fwd_90d": {
+        "n": 16,
+        "media": 0.2633688316525292,
+        "mediana": 0.26660675500675646,
+        "pct_positivo": 0.875
+      },
+      "fwd_180d": {
+        "n": 16,
+        "media": 0.5139422224873674,
+        "mediana": 0.5462340612232416,
+        "pct_positivo": 1.0
+      }
+    }
+  },
+  "benchmark_estatico_50_50": {
+    "in_sample": {
+      "retorno_anualizado": 0.10010934352687872,
+      "volatilidade_anualizada": 0.43198203162201276,
+      "sharpe_rf0": 0.43768445857968064,
+      "sortino_mar0": 0.3299853073087571,
+      "calmar": 0.15547216320221396,
+      "max_drawdown": -0.64390525908276,
+      "retorno_total": 0.5615522488120572,
+      "dias": 1705,
+      "beta_vs_buy_hold": 0.585992872870935,
+      "exposicao_media_btc": 0.5744673632449774
+    },
+    "out_of_sample": {
+      "retorno_anualizado": 0.3452205674883375,
+      "volatilidade_anualizada": 0.36908019600876674,
+      "sharpe_rf0": 0.9875143538514312,
+      "sortino_mar0": 1.428657790072549,
+      "calmar": 0.7603691831112567,
+      "max_drawdown": -0.4540170421896558,
+      "retorno_total": 1.889573357159195,
+      "dias": 1306,
+      "beta_vs_buy_hold": 0.7849848573658554,
+      "exposicao_media_btc": 0.786505806669087
+    }
+  },
+  "sensibilidade_custo_caixa": {
+    "custo_10bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.19037030777012398,
+        "sortino_mar0": 0.7809784611434678,
+        "max_drawdown": -0.4714468440917784
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.24039839603428081,
+        "sortino_mar0": 1.5085255246785063,
+        "max_drawdown": -0.31429995112481246
+      }
+    },
+    "custo_10bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": 0.2293015938723859,
+        "sortino_mar0": 0.9457003907607447,
+        "max_drawdown": -0.43647644206521674
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.3159959898490239,
+        "sortino_mar0": 2.0105681442157,
+        "max_drawdown": -0.2770950968160707
+      }
+    },
+    "custo_25bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.17780149221297203,
+        "sortino_mar0": 0.728179515764327,
+        "max_drawdown": -0.4761598274060813
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.22389803596763658,
+        "sortino_mar0": 1.4015254213179413,
+        "max_drawdown": -0.3223942897975981
+      }
+    },
+    "custo_25bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": 0.21632352724274462,
+        "sortino_mar0": 0.8906577473568983,
+        "max_drawdown": -0.4414916550555711
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.2984561385864779,
+        "sortino_mar0": 1.8942596276003754,
+        "max_drawdown": -0.2856296341971033
+      }
+    },
+    "custo_50bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": 0.15712962139559505,
+        "sortino_mar0": 0.6416488819413368,
+        "max_drawdown": -0.48393070132478966
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.19685389903384465,
+        "sortino_mar0": 1.2269043965032975,
+        "max_drawdown": -0.3356871942758357
+      }
+    },
+    "custo_50bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": 0.19497846879190628,
+        "sortino_mar0": 0.8004340343557194,
+        "max_drawdown": -0.4497610935106402
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.2697091101660072,
+        "sortino_mar0": 1.7043407505150985,
+        "max_drawdown": -0.2996454567474256
+      }
+    }
+  }
+}
+
+Análise gravada em resultados/analise_resultados_spot.json
+
+##########################################################################
+# PERFIL FUTUROS — série congelada: 2018-05-01 -> 2026-07-29 (3012 dias)
+##########################################################################
+{
+  "perfil": "futuros",
+  "janela": {
+    "inicio": "2018-05-01",
+    "fim": "2026-07-29",
+    "dias": 3012
+  },
+  "retornos_anuais": {
+    "2018": {
+      "estrategia_liq": 0.0543266496623902,
+      "buy_hold_liq": -0.5956981930787185,
+      "de": "2018-05-01",
+      "ate": "2018-12-31"
+    },
+    "2019": {
+      "estrategia_liq": 0.48587628111059966,
+      "buy_hold_liq": 0.9243153814875142,
+      "de": "2018-12-31",
+      "ate": "2019-12-31"
+    },
+    "2020": {
+      "estrategia_liq": -0.10515489794188626,
+      "buy_hold_liq": 3.03549820232836,
+      "de": "2019-12-31",
+      "ate": "2020-12-31"
+    },
+    "2021": {
+      "estrategia_liq": -0.4289611296151328,
+      "buy_hold_liq": 0.5968693176447069,
+      "de": "2020-12-31",
+      "ate": "2021-12-31"
+    },
+    "2022": {
+      "estrategia_liq": 0.2255042522306585,
+      "buy_hold_liq": -0.642780625640055,
+      "de": "2021-12-31",
+      "ate": "2022-12-31"
+    },
+    "2023": {
+      "estrategia_liq": 0.16641713882256104,
+      "buy_hold_liq": 1.5550421347795922,
+      "de": "2022-12-31",
+      "ate": "2023-12-31"
+    },
+    "2024": {
+      "estrategia_liq": 0.12966901514010232,
+      "buy_hold_liq": 1.2108120563334244,
+      "de": "2023-12-31",
+      "ate": "2024-12-31"
+    },
+    "2025": {
+      "estrategia_liq": 0.1262889488237955,
+      "buy_hold_liq": -0.06337376448659415,
+      "de": "2024-12-31",
+      "ate": "2025-12-31"
+    },
+    "2026": {
+      "estrategia_liq": 0.055241058995325165,
+      "buy_hold_liq": -0.2656684256512559,
+      "de": "2025-12-31",
+      "ate": "2026-07-29"
+    }
+  },
+  "janelas_de_crise": {
+    "covid_2020": {
+      "janela": "2020-02-01 -> 2020-04-30",
+      "dd_estrategia": -0.2075300012569672,
+      "dd_buy_hold": -0.5190811937486084
+    },
+    "ftx_2022": {
+      "janela": "2022-10-31 -> 2022-11-30",
+      "dd_estrategia": -0.0765154763921092,
+      "dd_buy_hold": -0.25832226598515007
+    },
+    "correcao_2026": {
+      "janela": "2026-01-01 -> 2026-07-29",
+      "dd_estrategia": -0.21189205867402516,
+      "dd_buy_hold": -0.3958979802537743
+    }
+  },
+  "information_ratio": {
+    "in_sample": {
+      "ir_canonico": -0.44484423476257146,
+      "tracking_error_anual": 0.7579135519027599,
+      "retorno_ativo_geometrico_aa": -0.13695733876520455,
+      "dias": 1705
+    },
+    "out_of_sample": {
+      "ir_canonico": -0.7166902135846568,
+      "tracking_error_anual": 0.47413663499852704,
+      "retorno_ativo_geometrico_aa": -0.3277001359718077,
+      "dias": 1306
+    }
+  },
+  "distribuicao_e_whipsaw": {
+    "pct_tempo_por_nivel": {
+      "-3": 0.033865,
+      "-2": 0.038513,
+      "-1": 0.237052,
+      "0": 0.39575,
+      "1": 0.225432,
+      "2": 0.037185,
+      "3": 0.032205
+    },
+    "n_rebalanceios": 1247,
+    "rebalanceios_por_ano": 151.2676021255397,
+    "saltos_2niveis_ou_mais": 264,
+    "pct_saltos_2niveis": 0.21170809943865276
+  },
+  "payoff_extremos": {
+    "entradas_em_-3_euforia": {
+      "n_entradas": 60,
+      "fwd_30d": {
+        "n": 60,
+        "media": 0.060242300684935926,
+        "mediana": 0.06476264611629812,
+        "pct_positivo": 0.6333333333333333
+      },
+      "fwd_90d": {
+        "n": 59,
+        "media": 0.23469665739607984,
+        "mediana": 0.11416478375519401,
+        "pct_positivo": 0.6610169491525424
+      },
+      "fwd_180d": {
+        "n": 59,
+        "media": 0.20637272357780714,
+        "mediana": 0.08434380272724717,
+        "pct_positivo": 0.6271186440677966
+      }
+    },
+    "entradas_em_+3_panico": {
+      "n_entradas": 63,
+      "fwd_30d": {
+        "n": 63,
+        "media": 0.0427292652429505,
+        "mediana": 0.005095638906884359,
+        "pct_positivo": 0.5555555555555556
+      },
+      "fwd_90d": {
+        "n": 63,
+        "media": 0.20140867029593598,
+        "mediana": 0.10829065613925692,
+        "pct_positivo": 0.6190476190476191
+      },
+      "fwd_180d": {
+        "n": 54,
+        "media": 0.6119304782794458,
+        "mediana": 0.32121052063037103,
+        "pct_positivo": 0.7592592592592593
+      }
+    }
+  },
+  "benchmark_estatico_50_50": {
+    "in_sample": {
+      "retorno_anualizado": 0.10010934352687872,
+      "volatilidade_anualizada": 0.43198203162201276,
+      "sharpe_rf0": 0.43768445857968064,
+      "sortino_mar0": 0.3299853073087571,
+      "calmar": 0.15547216320221396,
+      "max_drawdown": -0.64390525908276,
+      "retorno_total": 0.5615522488120572,
+      "dias": 1705,
+      "beta_vs_buy_hold": 0.585992872870935,
+      "exposicao_media_btc": 0.5744673632449774
+    },
+    "out_of_sample": {
+      "retorno_anualizado": 0.3452205674883375,
+      "volatilidade_anualizada": 0.36908019600876674,
+      "sharpe_rf0": 0.9875143538514312,
+      "sortino_mar0": 1.428657790072549,
+      "calmar": 0.7603691831112567,
+      "max_drawdown": -0.4540170421896558,
+      "retorno_total": 1.889573357159195,
+      "dias": 1306,
+      "beta_vs_buy_hold": 0.7849848573658554,
+      "exposicao_media_btc": 0.786505806669087
+    }
+  },
+  "sensibilidade_custo_caixa": {
+    "custo_10bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": -0.06344688342654947,
+        "sortino_mar0": -0.309385123123383,
+        "max_drawdown": -0.5955870016502488
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.0025834071046191287,
+        "sortino_mar0": 0.01751280589833721,
+        "max_drawdown": -0.38856649463627924
+      }
+    },
+    "custo_10bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": -0.004089728594416142,
+        "sortino_mar0": -0.020038726069485688,
+        "max_drawdown": -0.5757196228238087
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.13355976109876977,
+        "sortino_mar0": 0.9183735819737432,
+        "max_drawdown": -0.27129767608328237
+      }
+    },
+    "custo_25bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": -0.14364429191164096,
+        "sortino_mar0": -0.6913319447210973,
+        "max_drawdown": -0.6478311567597271
+      },
+      "out_of_sample": {
+        "retorno_anualizado": -0.09485069531750834,
+        "sortino_mar0": -0.6300860967676677,
+        "max_drawdown": -0.5138804623862813
+      }
+    },
+    "custo_25bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": -0.08935756921663285,
+        "sortino_mar0": -0.4321815918948021,
+        "max_drawdown": -0.6190471644690967
+      },
+      "out_of_sample": {
+        "retorno_anualizado": 0.02342638273466391,
+        "sortino_mar0": 0.157925532002885,
+        "max_drawdown": -0.36272555344523605
+      }
+    },
+    "custo_50bps_caixa_0pct": {
+      "in_sample": {
+        "retorno_anualizado": -0.2625675260323761,
+        "sortino_mar0": -1.2344650987700765,
+        "max_drawdown": -0.7877611004728865
+      },
+      "out_of_sample": {
+        "retorno_anualizado": -0.23691855941039475,
+        "sortino_mar0": -1.516795750546671,
+        "max_drawdown": -0.6993450524394982
+      }
+    },
+    "custo_50bps_caixa_selic_real": {
+      "in_sample": {
+        "retorno_anualizado": -0.21580190194142035,
+        "sortino_mar0": -1.0197726497318236,
+        "max_drawdown": -0.7400538763930121
+      },
+      "out_of_sample": {
+        "retorno_anualizado": -0.13716423727842553,
+        "sortino_mar0": -0.8917513403942727,
+        "max_drawdown": -0.5704417130694246
+      }
+    }
+  }
+}
+
+Análise gravada em resultados/analise_resultados_futuros.json
